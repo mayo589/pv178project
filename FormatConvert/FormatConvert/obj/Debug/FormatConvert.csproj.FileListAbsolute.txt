@@ -1,0 +1,6 @@
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\bin\Debug\FormatConvert.exe.config
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\obj\Debug\FormatConvert.csprojResolveAssemblyReference.cache
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\bin\Debug\FormatConvert.exe
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\bin\Debug\FormatConvert.pdb
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\obj\Debug\FormatConvert.exe
+D:\SKOLA\4 semester\PV178 uvod do c#\projekt\FormatConvert\FormatConvert\obj\Debug\FormatConvert.pdb
