@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows;
-using System.Drawing.Imaging.EncoderParameter;
+using System.Windows.Media;
 
+//Marek Mihalech
 
 namespace FormatConvert
 {
@@ -28,16 +29,16 @@ namespace FormatConvert
 
             */
 
+            
 
 
-
-            int width = 128;
+           /* int width = 128;
             int height = 128;
             int stride = width;
             byte[] pixels = new byte[height * stride];
-
+            */
             // Define the image palette
-            BitmapPalette myPalette = BitmapPalettes.Halftone256;
+           // BitmapPalette myPalette = BitmapPalettes.Halftone256;
 
             // Creates a new empty image with the pre-defined palette
 
@@ -51,16 +52,29 @@ namespace FormatConvert
                 pixels,
                 stride);*/
 
-            FileStream stream = new FileStream("output/new.png", FileMode.Create);
+            FileStream stream = new FileStream("output/newww.png", FileMode.Create);
             PngBitmapEncoder encoder = new PngBitmapEncoder();
             //TextBlock myTextBlock = new TextBlock();
             //myTextBlock.Text = "Codec Author is: " + encoder.CodecInfo.Author.ToString();
+            //JpegBitmapEncoder en = new JpegBitmapEncoder(); en.Quality....... na kompresiu
+            var target = new TransformedBitmap(
+                            bitmapSource,
+                            new ScaleTransform(
+                               100 / bitmapSource.Width * 96 / bitmapSource.DpiX,
+                                100/ bitmapSource.Height * 96 / bitmapSource.DpiY,
+                                0, 0
+
+                         ));
+            //bitmapSource.Height = 100;
+
             encoder.Interlace = PngInterlaceOption.On;
-            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+            encoder.Frames.Add(BitmapFrame.Create(target));
             encoder.Save(stream);
 
-            EncoderParameters myEncoderParameters = new EncoderParameters(1);
 
+
+
+            
 
         }
     }
