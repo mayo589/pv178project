@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace FormatConvert
 {
-    public enum FileTypes
+    public enum Action
     { 
-        Jpeg, Png, Tiff, Gif, Bmp, Invalid
+        Resize, Convert, Both
     }
 }
