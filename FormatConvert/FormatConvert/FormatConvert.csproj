@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converter.cs" />
+    <Compile Include="Action.cs" />
     <Compile Include="FileTypes.cs" />
     <Compile Include="IConverter.cs" />
     <Compile Include="Program.cs" />

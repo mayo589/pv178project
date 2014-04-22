@@ -91,10 +91,17 @@ namespace FormatConvert
 
         public void ProcessAllImages()
         {
+            if(mLoadingFromDirectory)
+            {
 
+            }
+            else //loading from list
+            {
+
+            }
         }
 
-        public BitmapSource LoadImage(string fileNameAndPath)
+        public BitmapSource LoadImage(string filename)
         {
             throw new NotImplementedException();
         }
@@ -102,21 +109,23 @@ namespace FormatConvert
         public BitmapSource ConvertImageToFormat(BitmapSource image)
         {
             throw new NotImplementedException();
+
         }
 
         public BitmapSource ResizeImage(BitmapSource image)
         {
             throw new NotImplementedException();
+
         }
 
         public void SaveImage(string fileNameAndPath)
         {
-            throw new NotImplementedException();
+
         }
 
         public void WriteToLog(string fileName, string info)
         {
-            throw new NotImplementedException();
+
         }
     }
 }
