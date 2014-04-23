@@ -26,6 +26,9 @@ namespace FormatConvert
         private int mNewWidth;
         private int mNewHeight;
 
+        private int mDirInt = 0;
+        private bool mCreatedOutputDir = false;
+
         public Action ActualAction
         {
             get { return mActualAction; }
@@ -91,7 +94,7 @@ namespace FormatConvert
 
 
 
-        public void ProcessAllImages()
+        public void ProcessAllImages() //presunut do program cs? pre lepisu pracu s kniznicou
         {
             if(mLoadingFromDirectory)
             {
@@ -104,6 +107,12 @@ namespace FormatConvert
                         Console.WriteLine("Stopping program, skip errors is set to false!");
                         return;
                     }
+                    else if (loadedImage == null && mSkipErrors == true)
+                    {
+                        Console.WriteLine("Program is going on, skiperros is set on true");
+                        continue;
+                    }
+
                     BitmapEncoder processedImage = null;
 
                     bool result = processAction(loadedImage, out processedImage, filePaths[i]);
@@ -124,16 +133,24 @@ namespace FormatConvert
                         Console.WriteLine("Stopping program, skip errors is set to false!");
                         return;
                     }
+                    else if (loadedImage == null && mSkipErrors == true)
+                    {
+                        Console.WriteLine("Program is going on, skiperros is set on true");
+                        continue;
+                    }
                     BitmapEncoder encoderImage = null;
 
                     bool result = processAction(loadedImage, out encoderImage, mListOfFiles[i]);
                     if (result)
                     {
-                        SaveImage(encoderImage, mListOfFiles[i]);
+                        string combined = Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileName(mListOfFiles[i]));
+                        SaveImage(encoderImage, combined);
                     }
                     Console.WriteLine("Processing completed : {0}%", ((i * 100) / mListOfFiles.Count));
                 }
             }
+
+            Console.WriteLine("Completed!!!!!");
         }
 
         private bool processAction(BitmapSource loadedImage, out BitmapEncoder encoderImage, string filename)
@@ -233,7 +250,7 @@ namespace FormatConvert
                         Console.WriteLine("Illegal image suffix... ");
                         return null;
                 }
-            }catch(FileFormatException ex)
+            }catch(FileFormatException)
             {
                 Console.WriteLine("File is not image... ");
                 return null;
@@ -299,8 +316,77 @@ namespace FormatConvert
         }
 
         public void SaveImage(BitmapEncoder encoder, string fileNameAndPath)
-        {
+        { // nezabudnut na jpeg kompresiu
 
+            
+
+            if (encoder.GetType() == typeof(JpegBitmapEncoder))
+            {
+                JpegBitmapEncoder newEncoder = (JpegBitmapEncoder) encoder;
+                newEncoder.QualityLevel = mJpegCompression;
+                FileStream stream = getStream(fileNameAndPath);
+                newEncoder.Save(stream);
+            }
+            else
+            {
+                FileStream stream = getStream(fileNameAndPath);
+                encoder.Save(stream);
+            }
+
+           // FileStream stream = new FileStream("output/chnagedims.png", FileMode.Create);
+           // encoder.Save(stream);
+        }
+
+        private FileStream getStream(string fileNameAndPath)
+        {//moverwrite = false -> dam do novej zlozky output, moverwrite = true, prepisem
+            if(mOverWrite) 
+            {
+                string changedSuffix = Path.ChangeExtension(fileNameAndPath, "." + FileTypeToString(mOutputFormat));
+                FileStream stream = new FileStream(changedSuffix, FileMode.Create);
+                return stream;
+            }
+            else
+            {
+                //bool successful = false;
+                int i = 0;
+                while (mCreatedOutputDir == false) 
+                {
+                    if (!Directory.Exists("output-" + i))
+                    {
+                        DirectoryInfo di = Directory.CreateDirectory("output-" + i);
+                        mCreatedOutputDir = true;
+                        mDirInt = i;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+
+                string name = Path.GetFileNameWithoutExtension(fileNameAndPath);
+                FileStream stream = new FileStream("output-" + mDirInt + "/" + name + "." + FileTypeToString(mOutputFormat), FileMode.Create);
+                return stream;
+
+            }
+        }
+
+        private string FileTypeToString(FileTypes type)
+        {
+            switch(type)
+            {
+                case FileTypes.Bmp:
+                    return "bmp";
+                case FileTypes.Gif:
+                    return "gif";
+                case FileTypes.Jpeg:
+                    return "jpeg";
+                case FileTypes.Png:
+                    return "png";
+                case FileTypes.Tiff:
+                    return "tiff";
+                default:
+                    return "";
+            }
         }
 
         public void WriteToLog(string fileName, string info)

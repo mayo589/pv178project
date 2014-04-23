@@ -30,13 +30,13 @@ namespace FormatConvert
         BitmapSource LoadImage(string filename);
 
 
-        BitmapSource ConvertImageToFormat(BitmapSource image);
+        //BitmapSource ConvertImageToFormat(BitmapSource image);
 
 
-        BitmapSource ResizeImage(BitmapSource image);
+        //BitmapSource ResizeImage(BitmapSource image);
 
 
-        void SaveImage(string fileNameAndPath);
+        //void SaveImage(string fileNameAndPath);
 
 
         void WriteToLog(string fileName, string info);

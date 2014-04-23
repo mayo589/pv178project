@@ -203,6 +203,13 @@ namespace FormatConvert
 
                 myConv.ProcessAllImages();
 
+                Console.WriteLine("New task or quit? 1-> new task, 2-> quit program");
+                string task = Console.ReadLine();
+                if(task == "2")
+                {
+                    canEnd = true;
+                }
+                    
 
 
             }
