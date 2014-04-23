@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.IO;
+using System.Windows.Media;
 
 namespace FormatConvert
 {
@@ -93,32 +95,210 @@ namespace FormatConvert
         {
             if(mLoadingFromDirectory)
             {
+                string[] filePaths = Directory.GetFiles(@mDirectory);
+                for (int i = 0; i < filePaths.Length; i++ )
+                {
+                    BitmapSource loadedImage = LoadImage(filePaths[i]);
+                    if(loadedImage == null && mSkipErrors == false)
+                    {
+                        Console.WriteLine("Stopping program, skip errors is set to false!");
+                        return;
+                    }
+                    BitmapEncoder processedImage = null;
 
+                    bool result = processAction(loadedImage, out processedImage, filePaths[i]);
+                    if (result)
+                    {
+                        SaveImage(processedImage, filePaths[i]);
+                    }
+                    Console.WriteLine("Processing completed : {0}%", ((i * 100) / filePaths.Length));
+                }
             }
             else //loading from list
             {
+                for(int i = 0; i < mListOfFiles.Count; i++)
+                {
+                    BitmapSource loadedImage = LoadImage(mListOfFiles[i]);
+                    if (loadedImage == null && mSkipErrors == false)
+                    {
+                        Console.WriteLine("Stopping program, skip errors is set to false!");
+                        return;
+                    }
+                    BitmapEncoder encoderImage = null;
+
+                    bool result = processAction(loadedImage, out encoderImage, mListOfFiles[i]);
+                    if (result)
+                    {
+                        SaveImage(encoderImage, mListOfFiles[i]);
+                    }
+                    Console.WriteLine("Processing completed : {0}%", ((i * 100) / mListOfFiles.Count));
+                }
+            }
+        }
+
+        private bool processAction(BitmapSource loadedImage, out BitmapEncoder encoderImage, string filename)
+        {
+            if (mActualAction == Action.Convert)
+            {
+                encoderImage = MakeEncoder();
+                encoderImage.Frames.Add(BitmapFrame.Create(loadedImage));
 
             }
+            else if (mActualAction == Action.Resize)
+            {
+
+                //encoderImage = ResizeImage(loadedImage);
+                string suffix = Path.GetExtension(filename).ToLower();
+                switch (suffix)
+                {
+                        case ".bmp":
+                            encoderImage = new BmpBitmapEncoder();
+                            break;
+                        case ".gif":
+                            encoderImage = new GifBitmapEncoder();
+                            break;
+                        case ".jpeg":
+                            encoderImage = new JpegBitmapEncoder();
+                            break;
+                        case ".png":
+                            encoderImage = new PngBitmapEncoder();
+                            break;
+                        case ".tiff":
+                            encoderImage = new TiffBitmapEncoder();
+                            break;
+                        default: // illegal suffix
+                            Console.WriteLine("Illegal image suffix... ");
+                            encoderImage = null;
+                            return false;
+                }   
+
+                TransformedBitmap trbm = ResizeImage(loadedImage);
+                if (trbm != null)
+                {
+                    encoderImage.Frames.Add(BitmapFrame.Create(trbm));
+                }
+                else
+                {
+                    return false;
+                }
+                //encoderImage = new 
+            }
+            else //BOTH
+            {
+
+                encoderImage = MakeEncoder();
+                TransformedBitmap trbm = ResizeImage(loadedImage);
+                if (trbm != null)
+                {
+                    encoderImage.Frames.Add(BitmapFrame.Create(trbm));
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public BitmapSource LoadImage(string filename)
         {
-            throw new NotImplementedException();
+            Stream imageStreamSource = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            //need to export suffix from filename
+            //filename.EndsWith(".jpeg", StringComparison.Ordinal);
+            string suffix = Path.GetExtension(filename).ToLower();
+
+            BitmapDecoder decoder = null;
+
+            try
+            {
+                switch (suffix)
+                {
+
+                    case ".bmp":
+                        decoder = new BmpBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        break;
+                    case ".gif":
+                        decoder = new GifBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        break;
+                    case ".jpeg":
+                        decoder = new JpegBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        break;
+                    case ".png":
+                        decoder = new PngBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        break;
+                    case ".tiff":
+                        decoder = new TiffBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+                        break;
+                    default: // illegal suffix
+                        Console.WriteLine("Illegal image suffix... ");
+                        return null;
+                }
+            }catch(FileFormatException ex)
+            {
+                Console.WriteLine("File is not image... ");
+                return null;
+            }
+            //JpegBitmapDecoder decoder = new JpegBitmapDecoder(imageStreamSource, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+            BitmapSource bitmapSource = decoder.Frames[0];
+            return bitmapSource;
         }
 
-        public BitmapSource ConvertImageToFormat(BitmapSource image)
+        public BitmapEncoder MakeEncoder()
         {
-            throw new NotImplementedException();
-
+            BitmapEncoder encoder = null;
+            switch(mOutputFormat)
+            {
+                case FileTypes.Bmp:
+                    encoder = new BmpBitmapEncoder();
+                    break;
+                case FileTypes.Gif:
+                    encoder = new GifBitmapEncoder();
+                    break;
+                case FileTypes.Jpeg:
+                    encoder = new JpegBitmapEncoder();
+                    break;
+                case FileTypes.Png:
+                    encoder = new PngBitmapEncoder();
+                    break;
+                case FileTypes.Tiff:
+                    encoder = new TiffBitmapEncoder();
+                    break;
+                default:
+                    encoder = null; // never?
+                    return encoder;
+            }
+            return encoder;
         }
 
-        public BitmapSource ResizeImage(BitmapSource image)
+        public TransformedBitmap ResizeImage(BitmapSource image)
         {
-            throw new NotImplementedException();
 
+            double ratioW = mNewWidth / image.Width;
+            double ratioH = mNewHeight / image.Height;
+
+            double ratio = ratioW < ratioH ? ratioW : ratioH;
+            TransformedBitmap target = null; ;
+
+            if (mOverZoom)
+            {
+                 target = new TransformedBitmap(
+                                image,
+                                new ScaleTransform(
+                                 (ratio * image.Width) / image.Width * image.DpiX / image.DpiX,
+                                 (ratio * image.Height) / image.Height * image.DpiY / image.DpiY,
+                                    0, 0
+
+                             ));
+            }
+            else if(!mOverZoom && ratio > 1)
+            {
+                Console.WriteLine("Cannot make bigger image, overZoom is set to false, skipping");
+                return null;
+            }
+            return target;
         }
 
-        public void SaveImage(string fileNameAndPath)
+        public void SaveImage(BitmapEncoder encoder, string fileNameAndPath)
         {
 
         }
